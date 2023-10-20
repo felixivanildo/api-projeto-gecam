@@ -1,7 +1,7 @@
 const cors = require ("cors");
 const express = require ("express")
 const app = express()
-const port = 3000;
+const port = 3010;
 const dbRouter = require ("../Routes/Routes.js")
 
 app.use(cors())
