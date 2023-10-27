@@ -40,7 +40,7 @@ const login = (req, res) => {
     pool.query(`select u.*, s.sectoraka as "country", c.cityname as "city" from users u inner join sector s on s.sectorid = u.sectorid
     inner join building b on b.buildingid = u.buildingid
     inner join city c on c.cityid = b.cityid
-    where username = '${req.body.user}' and userpassword = '${hashedpass}'`, (err, results) => {
+    where username = '${req.body.user}' and userpassword = '${hashedpass}' and u.isactive = true `, (err, results) => {
         if (err) {
             throw err
         }
@@ -358,12 +358,24 @@ const postCity = (req, res) => {
     )
 }
 
+const GetCity = (req, res) =>{
+    pool.query('select cityname as "title", cityid as "id" from city', (err, results)=>{
+        if(err){
+            res.json({message: err})
+        }
+
+
+        res.json(results.rows)
+    })
+
+}
+
 
 
 module.exports = {
     getUser, localize, login, registrar,
     getreport, getmyreports, imgConverter, getSectors,
-    postReport, postunity, getUnitys, postCity
+    postReport, postunity, getUnitys, postCity, GetCity
 }
 
 

@@ -15,6 +15,7 @@ router.post('/postreport', controler.postReport)
 router.post('/cadastrarunidade', controler.postunity)
 router.get('/unidadesdisponiveis', controler.getUnitys)
 router.post('/cadastrarcidade', controler.postCity)
+router.get('/consultarcidade', controler.GetCity)
 
 
 
