@@ -6,7 +6,7 @@ const fs = require('fs')
 
 const getUser = (req, res) => {
     pool.query(`
-    select concat (u.firstname, ' ', u.lastname) as "firstname", u.phone as "phone", s.sectoraka as "country", c.cityname as "city", u.jobttitle as "jobtitle" from users u
+    select concat (u.firstname, ' ', u.lastname) as "firstname", u.phone as "phone", s.sectoraka as "country", c.cityname as "city", u.jobttitle as "jobtitle", u.isactive, u.username from users u
     left join sector s on s.sectorid = u.sectorid
     left join building b on b.buildingid = u.buildingid
     left join city c on c.cityid = b.cityid`, (err, results) => {
