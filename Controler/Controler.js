@@ -6,7 +6,7 @@ const fs = require('fs')
 
 const getUser = (req, res) => {
     pool.query(`
-    select concat (u.firstname, ' ', u.lastname) as "firstname", u.phone as "phone", s.sectoraka as "country", c.cityname as "city", u.jobttitle as "jobtitle", u.isactive, u.username from users u
+    select  u.userid, concat (u.firstname, ' ', u.lastname) as "firstname", u.phone as "phone", s.sectoraka as "country", c.cityname as "city", u.jobttitle as "jobtitle", u.isactive, u.username from users u
     left join sector s on s.sectorid = u.sectorid
     left join building b on b.buildingid = u.buildingid
     left join city c on c.cityid = b.cityid`, (err, results) => {
@@ -16,6 +16,28 @@ const getUser = (req, res) => {
         // console.log(results.rows)
         res.status(200).json(results.rows)
     })
+}
+
+
+const getExclusive = (req, res) => {
+    // console.log(req.body)
+    pool.query(`select u.firstname as "firstName", u.lastname as "lastName", u.phone as "phone", s.sectoraka as "country",
+     c.cityname as "city", u.jobttitle as "jobtitle", u.isactive, u.username as "email"
+    from users u
+    left join sector s on s.sectorid = u.sectorid
+    left join building b on b.buildingid = u.buildingid
+    left join city c on c.cityid = b.cityid
+    where u.userid = ${req.body.id}`, (err, results) => {
+        if (err){
+            throw err
+        }
+
+        // console.log('entrei')
+        // console.log(results.rows)
+        res.json(results.rows)
+    })
+
+    
 }
 
 const localize = (req, res) => {
@@ -36,6 +58,7 @@ const localize = (req, res) => {
 
 const login = (req, res) => {
     const hashedpass = crypto.createHash('md5').update(req.body.pass).digest('hex')
+    // console.log('entrei')
 
     pool.query(`select u.*, s.sectoraka as "country", c.cityname as "city" from users u inner join sector s on s.sectorid = u.sectorid
     inner join building b on b.buildingid = u.buildingid
@@ -375,7 +398,8 @@ const GetCity = (req, res) =>{
 module.exports = {
     getUser, localize, login, registrar,
     getreport, getmyreports, imgConverter, getSectors,
-    postReport, postunity, getUnitys, postCity, GetCity
+    postReport, postunity, getUnitys, postCity, GetCity,
+    getExclusive
 }
 
 
