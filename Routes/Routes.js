@@ -4,7 +4,7 @@ const router = Router()
 
 
 router.get('/id', controler.getUser)
-router.put('/nova', controler.localize)
+router.put('/getexclusivereport', controler.localize)
 router.put('/login', controler.login)
 router.post('/registrar', controler.registrar)
 router.get('/getall', controler.getreport)
@@ -17,7 +17,7 @@ router.get('/unidadesdisponiveis', controler.getUnitys)
 router.post('/cadastrarcidade', controler.postCity)
 router.get('/consultarcidade', controler.GetCity)
 router.put('/getexclusive', controler.getExclusive)
-
+router.post('/updateuser', controler.updateUser)
 
 
 module.exports = router

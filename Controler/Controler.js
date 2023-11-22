@@ -21,7 +21,7 @@ const getUser = (req, res) => {
 
 const getExclusive = (req, res) => {
     // console.log(req.body)
-    pool.query(`select u.firstname as "firstName", u.lastname as "lastName", u.phone as "phone", s.sectoraka as "country",
+    pool.query(`select u.userid as "id",u.firstname as "firstName", u.lastname as "lastName", u.phone as "phone", s.sectoraka as "country",
      c.cityname as "city", u.jobttitle as "jobtitle", u.isactive, u.username as "email"
     from users u
     left join sector s on s.sectorid = u.sectorid
@@ -41,13 +41,29 @@ const getExclusive = (req, res) => {
 }
 
 const localize = (req, res) => {
-    pool.query(`select * from users where id = ${req.body.id}`, (err, results) => {
+    // console.log(Obatain.GetExclusiveReport(req.body.id))
+    function replaceNullWithBlank(obj) {
+        for (const key in obj) {
+          if (obj[key] === null) {
+            obj[key] = '';
+          } else if (typeof obj[key] === 'object') {
+            replaceNullWithBlank(obj[key]); // Recursively handle nested objects
+          }
+        }
+      }
+
+
+
+    pool.query(Obatain.GetExclusiveReport(req.body.id), (err, results) => {
         if (err) {
             throw err
         }
 
         if (results) {
-            res.status(200).json(rows)
+            // console.log(results.rows)
+            // const tosend = replaceNullWithBlank(results.rows)
+            // console.log(tosend)
+            res.json(results.rows)
         }
     })
 
@@ -395,11 +411,32 @@ const GetCity = (req, res) =>{
 
 
 
+const updateUser = (req, res) => {
+
+    // console.log(req.body)
+   pool.query (Obatain.updateUser(req.body), (err, results)=>{
+    if(err){
+        // console.log(Obatain.updateUser(req.body))
+        // console.log(err)
+        res.json({message: err})
+    }
+    else{
+        // console.log('heyyy, aca!!!!')
+        res.json({message: "Usuário Atualizado"})
+     }
+
+
+
+   })
+}
+
+
+
 module.exports = {
     getUser, localize, login, registrar,
     getreport, getmyreports, imgConverter, getSectors,
     postReport, postunity, getUnitys, postCity, GetCity,
-    getExclusive
+    getExclusive, updateUser
 }
 
 
