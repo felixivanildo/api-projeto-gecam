@@ -44,10 +44,10 @@ function updateUser(data) {
 
 
 function GetExclusiveReport(data){
-    return `SELECT ph as "PH", corverdadeira as "COR VERDADEIRA", turbidez AS "TURBIDEZ", condutanciaespecifica AS "CONDUTANCIA ESPECIFICA", acidez AS "ACIDEZ", alcalinidadeoh AS "ALCALINIDADE OH", \n` +
+    return `SELECT  ph as "PH", corverdadeira as "COR VERDADEIRA", turbidez AS "TURBIDEZ", condutanciaespecifica AS "CONDUTANCIA ESPECIFICA", acidez AS "ACIDEZ", alcalinidadeoh AS "ALCALINIDADE OH", \n` +
      `alcalinidadeco as "ALCALINIDADE CO", alcalinidadehco AS "ALCALINIDADE HCO", durezatotal AS "DUREZA TOTAL", durezacarbonatos AS "DUREZA CARBONATOS", calcio AS "CALCIO", magnesio AS "MAGNESIO", cloretos AS "CLORETOS", silica AS "SILICA", \n` +
       `sulfato AS "SULFATO", amonia AS "AMONIA", nitrato AS "NITRATO", nitrito AS "NITRITO", ferrototal AS "FERRO TOTAL", sodio AS "SODIO", potassio AS "POTASSIO", solidostotais AS "SOLIDOS TOTAIS", colifornestotais AS "COLIFORNES TOTAIS", escherichiacoli AS "ESCHERIA COLI", indice_nitrato_nitrito AS "INDICE NITRATO/NITRITO" \n` + 
-"FROM public.report_measurings\n" + 
+"FROM public.report_measurings \n" + 
 `where reportid = ${data} ;\n`;
 }
   

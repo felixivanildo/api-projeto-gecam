@@ -41,35 +41,45 @@ const getExclusive = (req, res) => {
 }
 
 const localize = (req, res) => {
-    // console.log(Obatain.GetExclusiveReport(req.body.id))
-    function replaceNullWithBlank(obj) {
-        for (const key in obj) {
-          if (obj[key] === null) {
-            obj[key] = '';
-          } else if (typeof obj[key] === 'object') {
-            replaceNullWithBlank(obj[key]); // Recursively handle nested objects
-          }
+    const imageArray = [];
+  
+    // First query for images
+    pool.query(`SELECT filename, fileextension FROM report_file WHERE report_id = ${req.body.id}`, (err, results) => {
+      if (err) {
+        console.error('Error executing first query:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+    //   console.log(results.rows)
+
+      for (let i = 0; i < results.rowCount; i++) {
+        
+        const imagepath = `./Images/${results.rows[i].filename}.${results.rows[i].fileextension}`;
+        
+        try {
+          const imageBuffer = fs.readFileSync(imagepath);
+          const base64img = imageBuffer.toString('base64');
+        //   console.log(base64img)
+        //   console.log(base64img.split('/')[0]);
+          imageArray.push({image: base64img, extension: results.rows[i].fileextension});
+        } catch (error) {
+          console.error(`Error reading file ${imagepath}: ${error.message}`);
         }
       }
-
-
-
-    pool.query(Obatain.GetExclusiveReport(req.body.id), (err, results) => {
+  
+      // Second query for exclusive report
+      pool.query(Obatain.GetExclusiveReport(req.body.id), (err, results) => {
         if (err) {
-            throw err
+          console.error('Error executing second query:', err);
+          res.status(500).json({ error: 'Internal Server Error' });
+          return;
         }
-
-        if (results) {
-            // console.log(results.rows)
-            // const tosend = replaceNullWithBlank(results.rows)
-            // console.log(tosend)
-            res.json(results.rows)
-        }
-    })
-
-
-
-}
+  
+        res.json({ data: results.rows, files: imageArray });
+      });
+    });
+  };
+  
 
 
 const login = (req, res) => {
