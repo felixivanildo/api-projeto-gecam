@@ -254,7 +254,7 @@ const postReport =  (req, res) => {
         }else{
               // console.log(req.body)
         // Fields to exclude.
-        console.log('results')
+        // console.log('results')
         // res.json({ created: 'Yes' })
         const data = req.body.dados
         const excludedFields = ['sector', 'notes', 'reportname', 'name'];
@@ -262,8 +262,15 @@ const postReport =  (req, res) => {
         // Assuming 'your_table' is the name of your PostgreSQL table
         const tableName = 'report_measurings';
     
-        let columns = '';
-        let values = '';
+        let fq_columns = '';
+        let fq_values = '';
+        
+        let bc_columns = '';
+        let bc_values = '';
+
+        
+        let clr_columns = '';
+        let clr_values = '';
         const queryParams = [];
     
         //    console.log(data)
@@ -271,19 +278,43 @@ const postReport =  (req, res) => {
         for (const key in data) {
             // console.log(data.key)
             if (data.hasOwnProperty(key) && !excludedFields.includes(key)) {
-                columns += `${key} ,`
-                values += `'${req.body.dados[key]}' ,`
+                if(String(key).split('_')[0] === 'fq')
+                {
+                    fq_columns += `${key} ,`
+                    fq_values += `'${req.body.dados[key]}' ,`
+                }
+
+                if(String(key).split('_')[0] === 'bc')
+                {
+                    bc_columns += `${key} ,`
+                    bc_values += `'${req.body.dados[key]}' ,`
+                }
+
+                if(String(key).split('_')[0] === 'clr')
+                {
+                    clr_columns += `${key} ,`
+                    clr_values += `'${req.body.dados[key]}' ,`
+                }
+
             }
+
+            
         }
     
         // Remove trailing comma and space
         //  console.log(values)
-        columns = columns.slice(0, -2);
-        values = values.slice(0, -2);
+        fq_columns = fq_columns.slice(0, -2);
+        fq_values = fq_values.slice(0, -2);
+
+        clr_columns = clr_columns.slice(0, -2);
+        clr_values = clr_values.slice(0, -2);
+
+        bc_columns = bc_columns.slice(0, -2)
+        bc_values = bc_values.slice(0, -2)
     
-        const insertQuery = `INSERT INTO ${tableName} (reportid, ${columns}) VALUES ((select report_id from report where reportname = '${req.body.dados.reportname}' limit 1), ${values}) RETURNING *;`;
+        // const insertQuery = `INSERT INTO ${tableName} (reportid, ${columns}) VALUES ((select report_id from report where reportname = '${req.body.dados.reportname}' limit 1), ${values}) RETURNING *;`;
     
-    
+        console.log(fq_columns, "|", fq_values)
     
     
         const query1 = () => {
@@ -313,17 +344,17 @@ const postReport =  (req, res) => {
     
     
     
-        try {
-            // const xzist = (``)
-            await query1(); // Wait for query1 to complete
-            query2(); // Execute query2 after query1 completes
-            query3()
+        // try {
+        //     // const xzist = (``)
+        //     await query1(); // Wait for query1 to complete
+        //     query2(); // Execute query2 after query1 completes
+        //     query3()
     
-            res.json({ message: "Criado" })
-        } catch (error) {
-            // Handle errors from query1
-            console.error(error);
-        }
+        //     res.json({ message: "Criado" })
+        // } catch (error) {
+        //     // Handle errors from query1
+        //     console.error(error);
+        // }
         }
       })
 };
