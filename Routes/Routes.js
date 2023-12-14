@@ -12,12 +12,14 @@ router.put('/getmyrepo', controler.getmyreports)
 router.post('/imgrecieve', controler.imgConverter)
 router.get('/sectors', controler.getSectors)
 router.post('/postreport', controler.postReport)
-router.post('/cadastrarunidade', controler.postunity)
+// router.post('/cadastrarunidade', controler.postunity)
 router.get('/unidadesdisponiveis', controler.getUnitys)
-router.post('/cadastrarcidade', controler.postCity)
+router.post('/cadastrar', controler.postModules)
 router.get('/consultarcidade', controler.GetCity)
 router.put('/getexclusive', controler.getExclusive)
 router.post('/updateuser', controler.updateUser)
+router.put('/deleteimage', controler.deleteImage)
+router.get('/getbuilding', controler.getBuilding)
 
 
 module.exports = router

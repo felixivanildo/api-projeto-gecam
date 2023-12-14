@@ -28,7 +28,7 @@ const getExclusive = (req, res) => {
     left join building b on b.buildingid = u.buildingid
     left join city c on c.cityid = b.cityid
     where u.userid = ${req.body.id}`, (err, results) => {
-        if (err){
+        if (err) {
             throw err
         }
 
@@ -37,49 +37,53 @@ const getExclusive = (req, res) => {
         res.json(results.rows)
     })
 
-    
+
 }
 
 const localize = (req, res) => {
     const imageArray = [];
-  
-    // First query for images
-    pool.query(`SELECT filename, fileextension FROM report_file WHERE report_id = ${req.body.id}`, (err, results) => {
-      if (err) {
-        console.error('Error executing first query:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-    //   console.log(results.rows)
 
-      for (let i = 0; i < results.rowCount; i++) {
-        
-        const imagepath = `./Images/${results.rows[i].filename}.${results.rows[i].fileextension}`;
-        
-        try {
-          const imageBuffer = fs.readFileSync(imagepath);
-          const base64img = imageBuffer.toString('base64');
-        //   console.log(base64img)
-        //   console.log(base64img.split('/')[0]);
-          imageArray.push({image: base64img, extension: results.rows[i].fileextension});
-        } catch (error) {
-          console.error(`Error reading file ${imagepath}: ${error.message}`);
-        }
-      }
-  
-      // Second query for exclusive report
-      pool.query(Obatain.GetExclusiveReport(req.body.id), (err, results) => {
+    // console.log(req.body)
+
+
+
+    // console.log(`SELECT filename, report_id, file_id, fileextension FROM report_file WHERE report_id = ${req.body.id}`)
+    pool.query(`SELECT filename, report_id, file_id, fileextension FROM report_file WHERE report_id = ${req.body.id}`, (err, results) => {
         if (err) {
-          console.error('Error executing second query:', err);
-          res.status(500).json({ error: 'Internal Server Error' });
-          return;
+            // console.error('Error executing first query:', err);
+            res.status(500).json({ error: 'Internal Server Error' });
+            return;
         }
-  
-        res.json({ data: results.rows, files: imageArray });
-      });
+        //   console.log(results.rows)
+
+        for (let i = 0; i < results.rowCount; i++) {
+
+            const imagepath = `./Images/${results.rows[i].filename}.${results.rows[i].fileextension}`;
+
+            try {
+                const imageBuffer = fs.readFileSync(imagepath);
+                const base64img = imageBuffer.toString('base64');
+                //   console.log(base64img)
+                //   console.log(base64img.split('/')[0]);
+                imageArray.push({ image: base64img, extension: results.rows[i].fileextension, imageid: results.rows[i].file_id, repoid: results.rows[i].report_id });
+            } catch (error) {
+                console.error(`Error reading file ${imagepath}: ${error.message}`);
+            }
+        }
+
+        // Second query for exclusive report
+        pool.query(Obatain.GetExclusiveReport(req.body.id), (err, results) => {
+            if (err) {
+                console.error('Error executing second query:', err);
+                res.status(500).json({ error: 'Internal Server Error' });
+                return;
+            }
+
+            res.json({ data: results.rows, files: imageArray });
+        });
     });
-  };
-  
+};
+
 
 
 const login = (req, res) => {
@@ -160,6 +164,16 @@ const getreport = async (req, res) => {
 };
 
 
+const getBuilding = async (req, res) =>{
+    pool.query(`select buildingname as "title", buildingid as "id" from building`, (err, results)=>{
+        if(err){
+            res.json({message: err})
+        }
+
+        res.json(results.rows)
+    })
+}
+
 const getmyreports = async (req, res) => {
     var objectsArray = [];
 
@@ -195,8 +209,77 @@ const getmyreports = async (req, res) => {
 }
 
 
+const deleteImage = async (req, res) => {
+    console.log(req.body)
+
+    const files = req.body.id
+
+    // console.log(`select * from report_file where file_id = ${files}`)
+    // console.log(`delete from report_file where file_id = ${files}`)
+
+
+
+    pool.query(`select * from report_file where file_id = ${files}`, (err, results) => {
+
+        if (err) {
+            res.json({ message: err })
+        }
+
+        imagepath = `./Images/${results.rows[0].filename}.${results.rows[0].fileextension}`
+
+        fs.unlink(imagepath, (error) => {
+            if (error) {
+                res.json(error)
+            } else {
+
+
+                pool.query(`delete from report_file where file_id = ${files}`, (err, results) => {
+                    if (err) {
+                        res.json({ message: err })
+
+                    }
+                    res.json({ message: "deleted" })
+                }
+
+                )
+
+            }
+
+
+        })
+
+    })
+
+
+    // pool.query(`delete from report_file where file_id in (${files})`, (err, results)=>{
+    //     if(err){
+    //         res.json({message: err})
+    //     }
+
+    //     pool.query(`select * from report_file where file_id = ${files}`, (err, results)=>{
+    //             if(err){
+    //                 res.json({message: err})
+    //             }
+
+    //             imagepath = `./Images/${results.rows[0].filename}.${results.rows[0].fileextension}`
+
+    //         fs.unlink(imagepath, (error)=>{
+    //             if(error){
+    //                 res.json(error)
+    //             }
+
+    //             res.json({message: "deleted"})
+    //         })
+
+
+    //     })
+    // })
+
+
+
+}
+
 const imgConverter = async (req, res) => {
-    console.log(req.body.name)
 
 
     const date = new Date()
@@ -231,7 +314,7 @@ const imgConverter = async (req, res) => {
 
     // imageBuffer = fs.readFileSync(imagepath)
 
-    // console.log(imageBuffer)
+    console.log(imageBuffer)
 
     res.status(200).json({ message: 'created' })
 
@@ -240,123 +323,147 @@ const imgConverter = async (req, res) => {
 }
 
 
-const postReport =  (req, res) => {
+const postReport = (req, res) => {
 
     // console.log(req.body)
 
-    pool.query(`select * from report where reportname = '${req.body.dados.reportname}'`, async (err, haveany)=>{
-        if(err){
-            res.json({message: err})
+    pool.query(`select * from report where reportname = '${req.body.dados.reportname}'`, async (err, haveany) => {
+        if (err) {
+            res.json({ message: err })
         }
-    
-        if(haveany.rowCount > 0){
-            res.json({message: "Nome indisponivel ou já utilizado"})
-        }else{
-              // console.log(req.body)
-        // Fields to exclude.
-        // console.log('results')
-        // res.json({ created: 'Yes' })
-        const data = req.body.dados
-        const excludedFields = ['sector', 'notes', 'reportname', 'name'];
-    
-        // Assuming 'your_table' is the name of your PostgreSQL table
-        const tableName = 'report_measurings';
-    
-        let fq_columns = '';
-        let fq_values = '';
-        
-        let bc_columns = '';
-        let bc_values = '';
 
-        
-        let clr_columns = '';
-        let clr_values = '';
-        const queryParams = [];
-    
-        //    console.log(data)
-    
-        for (const key in data) {
-            // console.log(data.key)
-            if (data.hasOwnProperty(key) && !excludedFields.includes(key)) {
-                if(String(key).split('_')[0] === 'fq')
-                {
-                    fq_columns += `${key} ,`
-                    fq_values += `'${req.body.dados[key]}' ,`
+        if (haveany.rowCount > 0) {
+            res.json({ message: "Nome indisponivel ou já utilizado" })
+        } else {
+            // console.log(req.body)
+            // Fields to exclude.
+            // console.log('results')
+            // res.json({ created: 'Yes' })
+            const data = req.body.dados
+            const excludedFields = ['sector', 'notes', 'reportname', 'name'];
+
+            // Assuming 'your_table' is the name of your PostgreSQL table
+            // const tableName = 'report_measurings';
+
+            // let report_header_columns = '';
+            // let report_header_values = '';
+
+            let fq_columns = '';
+            let fq_values = '';
+
+            let bc_columns = '';
+            let bc_values = '';
+
+
+            let clr_columns = '';
+            let clr_values = '';
+            // const queryParams = [];
+
+            //    console.log(data)
+
+            for (const key in data) {
+                // console.log(data.key)
+                if (data.hasOwnProperty(key) && !excludedFields.includes(key)) {
+                    if (String(key).split('_')[0] === 'fq') {
+                        fq_columns += `${key} ,`
+                        fq_values += `'${req.body.dados[key]}' ,`
+                    }
+                    if (String(key).split('_')[0] === 'bc') {
+                        bc_columns += `${key} ,`
+                        bc_values += `'${req.body.dados[key]}' ,`
+                    }
+                    if (String(key).split('_')[0] === 'clr') {
+                        clr_columns += `${key} ,`
+                        clr_values += `'${req.body.dados[key]}' ,`
+                    }
+                    // else{
+                    //     report_header_columns += `${key} ,`
+                    //     report_header_values +=  `'${req.body.dados[key]}' ,`
+                    // }
+
                 }
 
-                if(String(key).split('_')[0] === 'bc')
-                {
-                    bc_columns += `${key} ,`
-                    bc_values += `'${req.body.dados[key]}' ,`
-                }
-
-                if(String(key).split('_')[0] === 'clr')
-                {
-                    clr_columns += `${key} ,`
-                    clr_values += `'${req.body.dados[key]}' ,`
-                }
 
             }
 
-            
-        }
-    
-        // Remove trailing comma and space
-        //  console.log(values)
-        fq_columns = fq_columns.slice(0, -2);
-        fq_values = fq_values.slice(0, -2);
+            // Remove trailing comma and space
+            // console.log(fq_columns === `fq_ph ,`? true :false, fq_values === `'' ,`? true : false)
 
-        clr_columns = clr_columns.slice(0, -2);
-        clr_values = clr_values.slice(0, -2);
 
-        bc_columns = bc_columns.slice(0, -2)
-        bc_values = bc_values.slice(0, -2)
-    
-        // const insertQuery = `INSERT INTO ${tableName} (reportid, ${columns}) VALUES ((select report_id from report where reportname = '${req.body.dados.reportname}' limit 1), ${values}) RETURNING *;`;
-    
-        console.log(fq_columns, "|", fq_values)
-    
-    
-        const query1 = () => {
-            return new Promise((resolve, reject) => {
-                pool.query(Obatain.PostMyReport({ sector: req.body.dados.sector, user: req.body.usuario.id, name: req.body.dados.reportname }), (err, results) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(results);
-                    }
+
+
+            fq_columns === `fq_ph ,` ? fq_columns = `fq_ph ,fq_cor_aparente ,fq_turbidez ,fq_condutancia_especifica ,fq_acidez ,fq_alcalinidade_oh ,fq_alcalinidade_co ,
+            fq_alcalinidade_hco ,fq_dureza_total ,fq_dureza_carbonatos ,fq_dureza_ncarbonatos ,fq_calcio ,fq_magnesio ,fq_cloretos ,fq_silica ,fq_sulfato ,
+            fq_amonia ,fq_nitrato ,fq_nitrito ,fq_indice_nitrato_nitrito ,fq_ferro_total ,fq_sodio ,fq_potassio ,fq_solidos_totais ,fq_cloro_residual_livre ,
+            fq_coliformes_totais ,fq_escherichia_coli`: fq_columns = fq_columns.slice(0, -2);
+            fq_values === `'' ,` ? fq_values = ` '' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,'' ,''  ` : fq_values = fq_values.slice(0, -2);
+
+            clr_columns.length <= 1 ? clr_columns = `clr_procedencia, clr_observacao_do_ambiente, clr_entrada_no_laboratorio, clr_condicao_da_amostra, clr_inicio_analise,
+            clr_termino_analise, clr_volume_filtrado, clr_resultado` : clr_columns = clr_columns.slice(0, -2);
+            clr_values.length <= 1 ? clr_values = `'','' ,'' ,'' ,'' ,'' ,'' ,''  ` : clr_values = clr_values.slice(0, -2);
+
+            bc_columns.length <= 1 ? bc_columns = 'bc_cor, bc_turbidez, bc_cloro_residual_livre,  bc_coliformes_totais, bc_escherichia_coli, bc_ph ' : bc_columns = bc_columns.slice(0, -2)
+            bc_values.length <= 1 ? bc_values = `'','','','','','' ` : bc_values = bc_values.slice(0, -2)
+
+            // report_header_columns = report_header_columns.slice(0, -2)
+            // report_header_values = report_header_values.slice(0, -2)
+
+            // const insertQuery = `INSERT INTO ${tableName} (reportid, ${columns}) VALUES ((select report_id from report where reportname = '${req.body.dados.reportname}' limit 1), ${values}) RETURNING *;`;
+
+            // console.log(clr_values)
+
+            const insertQuerys = [`INSERT INTO report_measurings (reportid, ${fq_columns}) VALUES ((select report_id from report where reportname = '${req.body.dados.reportname}' limit 1), ${fq_values}) RETURNING *;`,
+            `INSERT INTO report_bacteriologica (reportid, ${bc_columns}) VALUES ((select report_id from report where reportname = '${req.body.dados.reportname}' limit 1), ${bc_values}) RETURNING *;`,
+            `INSERT INTO report_clorofila (reportid, ${clr_columns}) VALUES ((select report_id from report where reportname = '${req.body.dados.reportname}' limit 1), ${clr_values}) RETURNING *;`
+
+            ]
+
+
+            const query1 = () => {
+                return new Promise((resolve, reject) => {
+                    pool.query(Obatain.PostMyReport({ sector: req.body.dados.sector, user: req.body.usuario.id, name: req.body.dados.reportname }), (err, results) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(results);
+                        }
+                    });
                 });
-            });
-        };
-    
-        const query2 = () => {
-            console.log('results')
-            pool.query(insertQuery, (err, results) => {
-                if (err) {
-                    // handle error
-                } else {
-                    // handle success
+            };
+
+            const query2 = () => {
+                // console.log('results')
+
+                for (var x = 0; x < insertQuerys.length; x++) {
+
+                    // console.log(insertQuerys[x])
+                    pool.query(insertQuerys[x], (err, results) => {
+                        if (err) {
+                            // handle error
+                        } else {
+                            // handle success
+                        }
+                    });
                 }
-            });
-        };
-    
-        const query3 = () => { pool.query(`insert into report_note (report_id, note) values ((select report_id from report where reportname = '${req.body.dados.reportname}'), '${req.body.dados.notes}')`, (err, results) => { }) }
-    
-    
-    
-        // try {
-        //     // const xzist = (``)
-        //     await query1(); // Wait for query1 to complete
-        //     query2(); // Execute query2 after query1 completes
-        //     query3()
-    
-        //     res.json({ message: "Criado" })
-        // } catch (error) {
-        //     // Handle errors from query1
-        //     console.error(error);
-        // }
+            };
+
+            const query3 = () => { pool.query(`insert into report_note (report_id, note) values ((select report_id from report where reportname = '${req.body.dados.reportname}'), '${req.body.dados.notes}')`, (err, results) => { }) }
+
+
+
+            try {
+                // const xzist = (``)
+                await query1(); // Wait for query1 to complete
+                query2(); // Execute query2 after query1 completes
+                query3()
+
+                res.json({ message: "Criado" })
+            } catch (error) {
+                // Handle errors from query1
+                console.error(error);
+            }
         }
-      })
+    })
 };
 
 
@@ -370,28 +477,6 @@ const getSectors = (req, res) => {
 
 
 const postunity = (req, res) => {
-    // console.log(req.body)
-    const unityActiveStatus = req.body.switchFieldName ? 1 : 2
-
-    pool.query(`select * from unity where unityname = '${req.body.nomeUnidadeOrg.toUpperCase()}'`, (err, results) => {
-        if (err) {
-            res.json({ message: err })
-        }
-
-        if (results.rowCount > 0) {
-            res.json({ message: "Nome de unidade indisponivel ou já utilizado" })
-        } else {
-            pool.query("INSERT INTO public.unity\n" +
-                "(unityname, activestatus, updatedat)\n" +
-                `VALUES('${req.body.nomeUnidadeOrg.toUpperCase()}', ${unityActiveStatus}, CURRENT_DATE)\n`, (err, results) => {
-                    if (err) {
-                        res.json({ error: err })
-                    }
-
-                    res.json({ message: "Criada" })
-                })
-        }
-    })
 
 
 
@@ -408,40 +493,129 @@ const getUnitys = (req, res) => {
 }
 
 
-const postCity = (req, res) => {
+const postModules = (req, res) => {
+
+    if (req.body.mode === "cidade") {
+        pool.query(`select * from city where cityname = '${req.body.dados.nomeCidade.toUpperCase()}'`, (err, results) => {
+            // console.log(req.body)
+
+            if (err) {
+                res.json({ message: err })
+            }
+
+            if (results.rowCount > 0) {
+                res.json({ message: "Nome de cidade indisponivel ou já utilizado" })
+            } else {
+
+                pool.query(`insert into city (cityname, unityid, isactive) values ('${req.body.dados.nomeCidade.toUpperCase()}', ${req.body.dados.unidadeOrg.id}, ${req.body.dados.switchFieldName})`, (err, results) => {
+                    if (err) {
+                        res.json({ message: err })
+                    }
+
+                    res.json({ message: "Criada" })
+                })
+            }
+
+
+        }
+        )
+    }
 
 
 
-
-    pool.query(`select * from city where cityname = '${req.body.nomeCidade.toUpperCase()}'`, (err, results) => {
+    if (req.body.mode === "unidade") {
         // console.log(req.body)
+        const unityActiveStatus = req.body.dados.switchFieldName ? 1 : 2
 
-        if (err) {
-            res.json({ message: err })
-        }
+        pool.query(`select * from unity where unityname = '${req.body.dados.nomeUnidadeOrg.toUpperCase()}'`, (err, results) => {
+            if (err) {
+                res.json({ message: err })
+            }
 
-        if (results.rowCount > 0) {
-            res.json({ message: "Nome de cidade indisponivel ou já utilizado" })
-        } else {
+            if (results.rowCount > 0) {
+                res.json({ message: "Nome de unidade indisponivel ou já utilizado" })
+            } else {
+                pool.query("INSERT INTO public.unity\n" +
+                    "(unityname, activestatus, updatedat)\n" +
+                    `VALUES('${req.body.dados.nomeUnidadeOrg.toUpperCase()}', ${unityActiveStatus}, CURRENT_DATE)\n`, (err, results) => {
+                        if (err) {
+                            res.json({ error: err })
+                        }
 
-            pool.query(`insert into city (cityname, unityid, isactive) values ('${req.body.nomeCidade.toUpperCase()}', ${req.body.unidadeOrg.id}, ${req.body.switchFieldName})`, (err, results) => {
-                if (err) {
-                    res.json({ message: err })
-                }
+                        res.json({ message: "Criada" })
+                    })
+            }
+        })
 
-                res.json({ message: "Criada" })
-            })
-        }
+    }
+
+
+
+    if (req.body.mode === "setor") {
+        pool.query(`select * from sector where sectorname = '${String(req.body.dados.nomeSetor).toUpperCase()}'`, (error, results)=>{
+            if(error){
+                res.json(error)
+            }
+
+
+            if(results.rowCount > 0){
+                res.json({message: "Nome indisponivel ou já utilizado"})
+
+            } else {
+
+                // console.log(req.body.dados)
+                pool.query(Obatain.InsertSector(req.body.dados), (err, results)=>{
+                    if(err){
+                        res.json({message: err})
+                    }
+        
+                    res.json({message: "Criada"})
+               })
+
+                
+            }
+        })
 
 
     }
-    )
+
+
+    if (req.body.mode === "predio") {
+        pool.query(`select * from building where buildingname = '${req.body.dados.nomePredio}'`, (error, results)=>{
+            if(error){
+                res.json(error)
+            }
+
+
+            if(results.rowCount > 0){
+                res.json({message: "Nome indisponivel ou já utilizado"})
+
+            } else {
+                pool.query(Obatain.InsertBuilding(req.body.dados), (err, results)=>{
+                    if(err){
+                        res.json({message: err})
+                    }
+        
+                    res.json({message: "Criada"})
+               })
+            }
+        })
+      
+
+
+    }
+
+
+
+
+
+
 }
 
-const GetCity = (req, res) =>{
-    pool.query('select cityname as "title", cityid as "id" from city', (err, results)=>{
-        if(err){
-            res.json({message: err})
+const GetCity = (req, res) => {
+    pool.query('select cityname as "title", cityid as "id" from city', (err, results) => {
+        if (err) {
+            res.json({ message: err })
         }
 
 
@@ -452,23 +626,24 @@ const GetCity = (req, res) =>{
 
 
 
+
 const updateUser = (req, res) => {
 
     // console.log(req.body)
-   pool.query (Obatain.updateUser(req.body), (err, results)=>{
-    if(err){
-        // console.log(Obatain.updateUser(req.body))
-        // console.log(err)
-        res.json({message: err})
-    }
-    else{
-        // console.log('heyyy, aca!!!!')
-        res.json({message: "Usuário Atualizado"})
-     }
+    pool.query(Obatain.updateUser(req.body), (err, results) => {
+        if (err) {
+            // console.log(Obatain.updateUser(req.body))
+            // console.log(err)
+            res.json({ message: err })
+        }
+        else {
+            // console.log('heyyy, aca!!!!')
+            res.json({ message: "Usuário Atualizado" })
+        }
 
 
 
-   })
+    })
 }
 
 
@@ -476,8 +651,8 @@ const updateUser = (req, res) => {
 module.exports = {
     getUser, localize, login, registrar,
     getreport, getmyreports, imgConverter, getSectors,
-    postReport, postunity, getUnitys, postCity, GetCity,
-    getExclusive, updateUser
+    postReport, postunity, getUnitys, postModules, GetCity,
+    getExclusive, updateUser, deleteImage, getBuilding
 }
 
 

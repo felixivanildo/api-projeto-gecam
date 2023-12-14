@@ -44,11 +44,70 @@ function updateUser(data) {
 
 
 function GetExclusiveReport(data){
-    return `SELECT  ph as "PH", corverdadeira as "COR VERDADEIRA", turbidez AS "TURBIDEZ", condutanciaespecifica AS "CONDUTANCIA ESPECIFICA", acidez AS "ACIDEZ", alcalinidadeoh AS "ALCALINIDADE OH", \n` +
-     `alcalinidadeco as "ALCALINIDADE CO", alcalinidadehco AS "ALCALINIDADE HCO", durezatotal AS "DUREZA TOTAL", durezacarbonatos AS "DUREZA CARBONATOS", calcio AS "CALCIO", magnesio AS "MAGNESIO", cloretos AS "CLORETOS", silica AS "SILICA", \n` +
-      `sulfato AS "SULFATO", amonia AS "AMONIA", nitrato AS "NITRATO", nitrito AS "NITRITO", ferrototal AS "FERRO TOTAL", sodio AS "SODIO", potassio AS "POTASSIO", solidostotais AS "SOLIDOS TOTAIS", colifornestotais AS "COLIFORNES TOTAIS", escherichiacoli AS "ESCHERIA COLI", indice_nitrato_nitrito AS "INDICE NITRATO/NITRITO" \n` + 
-"FROM public.report_measurings \n" + 
-`where reportid = ${data} ;\n`;
+    return "\n" + 
+    "SELECT r.*,\n" + 
+    "rm.fq_ph as \"fq_PH\",\n" + 
+    "rm.fq_cor_verdadeira as \"fq_COR VERDADEIRA\",\n" + 
+    "rm.fq_turbidez as \"fq_TURBIDEZ\",\n" + 
+    "rm.fq_condutancia_especifica as \"fq_CONDUTANCIA ESPECIFICA\",\n" + 
+    "rm.fq_acidez as \"fq_ACIDEZ\",\n" + 
+    "rm.fq_alcalinidade_oh as \"fq_ALCALINIDADE OH\",\n" + 
+    "rm.fq_alcalinidade_co as \"fq_ALCALINIDADE CO\",\n" + 
+    "rm.fq_alcalinidade_hco as \"fq_ALCALINIDADE HCO\",\n" + 
+    "rm.fq_dureza_total as \"fq_DUREZA TOTAL\",\n" + 
+    "rm.fq_dureza_carbonatos as \"fq_DUREZA CARBONATOS\",\n" + 
+    "rm.fq_dureza_ncarbonatos as \"fq_DUREZA NÃO CARBONATOS\",\n" + 
+    "rm.fq_calcio as \"fq_CALCIO\",\n" + 
+    "rm.fq_magnesio as \"fq_MAGNESIO\",\n" + 
+    "rm.fq_cloretos as \"fq_CLORETOS\",\n" + 
+    "rm.fq_silica as \"fq_SILICA\",\n" + 
+    "rm.fq_sulfato as \"fq_SULFATO\",\n" + 
+    "rm.fq_amonia as \"fq_AMÔNIA\",\n" + 
+    "rm.fq_nitrato as \"fq_NITRATO\",\n" + 
+    "rm.fq_nitrito as \"fq_NITRITO\",\n" + 
+    "rm.fq_ferro_total as \"fq_FERRO TOTAL\",\n" + 
+    "rm.fq_sodio as \"fq_SÓDIO\",\n" + 
+    "rm.fq_potassio as \"fq_POTASSIO\",\n" + 
+    "rm.fq_solidos_totais as \"fq_SOLIDOS TOTAIS\",\n" + 
+    "rm.fq_coliformes_totais as \"fq_COLIFORMES TOTAIS\",\n" + 
+    "rm.fq_escherichia_coli as \"fq_ESCHERICHIA COLI\",\n" + 
+    "rm.fq_indice_nitrato_nitrito as \"fq_INDICE NITRATO NITRITO\",\n" + 
+    "rm.fq_cloro_residual_livre as \"fq_CLORO RESIDUAL LIVRE\",\n" + 
+    "rc.clr_observacao_do_ambiente as \"clr_OBSERVAÇÃO DO AMBIENTE\",\n" + 
+    "rc.clr_entrada_no_laboratorio as \"clr_ENTRADA NO LABORATORIO\",\n" + 
+    "rc.clr_condicao_da_amostra as \"clr_CONDICAO DA AMOSTRA\",\n" + 
+    "rc.clr_inicio_analise as \"clr_INICIO ANALISE\",\n" + 
+    "rc.clr_termino_analise as \"clr_TERMINO ANALISE\",\n" + 
+    "rc.clr_volume_filtrado as \"clr_VOLUME FILTRADO\",\n" + 
+    "rc.clr_procedencia as \"clr_PROCEDÊNCIA\",\n" + 
+    "rc.clr_resultado as \"clr_RESULTADO\",\n" + 
+    "rb.bc_cor as \"bc_COR\",\n" + 
+    "rb.bc_turbidez as \"bc_TURBIDEZ\",\n" + 
+    "rb.bc_cloro_residual_livre as \"bc_CLORO RESIDUAL LIVRE\",\n" + 
+    "rb.bc_coliformes_totais as \"bc_COLIFORMES TOTAIS\",\n" + 
+    "rb.bc_escherichia_coli as \"bc_ESCHERICHIA COLI\",\n" + 
+    "rb.bc_ph as \"bc_PH\"\n" + 
+    "FROM report r\n" + 
+    "left join report_measurings rm on rm.reportid = r.report_id\n" + 
+    "left join report_bacteriologica rb on rb.reportid = r.report_id\n" + 
+    "left join report_clorofila rc on rc.reportid = r.report_id\n" + 
+    `where r.report_id = ${data} ;\n`;;
+}
+
+
+
+function InsertBuilding (data) {
+    return "\n" + 
+    "INSERT INTO public.building\n" + 
+    "(buildingname, buildingaka, cityid, updatedat, isactive)\n" + 
+    `VALUES('${String(data.nomePredio).toUpperCase()}', '${String(data.nomeAbreviado).toUpperCase()}', ${data.Cidade.id}, CURRENT_DATE, ${data.switchFieldName});\n`;
+}
+
+function InsertSector (data) {
+    return "\n" + 
+    "INSERT INTO public.sector\n" + 
+    "(sectorname, sectoraka, updatedat, buildingid, isactive)\n" + 
+    `VALUES('${String(data.nomeSetor).toUpperCase()}', '${String(data.nomeAbreviado).toUpperCase()}', CURRENT_DATE, ${data.Predio.id}, true);\n`;
 }
   
 module.exports = {
@@ -56,5 +115,8 @@ module.exports = {
     GetMyReports,
     PostMyReport,
     updateUser,
-    GetExclusiveReport
+    GetExclusiveReport,
+    InsertBuilding,
+    InsertSector
+
 }
