@@ -109,6 +109,20 @@ function InsertSector (data) {
     "(sectorname, sectoraka, updatedat, buildingid, isactive)\n" + 
     `VALUES('${String(data.nomeSetor).toUpperCase()}', '${String(data.nomeAbreviado).toUpperCase()}', CURRENT_DATE, ${data.Predio.id}, true);\n`;
 }
+
+function InsertEnterprise (data) {
+    return "\n" + 
+    "INSERT INTO public.interested_enterprises\n" + 
+    "(enter_name, enter_aka, isactive)\n" + 
+    `VALUES('${String(data.nomeEmpresa).toUpperCase()}', '${String(data.nomeAbreviado).toUpperCase()}', ${data.switchFieldName});\n`;
+}
+
+
+function InsertCollectType (data) {
+    return "INSERT INTO public.collect_type\n" + 
+    "(ct_name, isactive)\n" + 
+    `VALUES('${String(data.nomeColeta).toUpperCase()}', ${data.switchFieldName});\n`;
+}
   
 module.exports = {
     GetAllReports,
@@ -117,6 +131,8 @@ module.exports = {
     updateUser,
     GetExclusiveReport,
     InsertBuilding,
-    InsertSector
+    InsertEnterprise,
+    InsertSector,
+    InsertCollectType
 
 }

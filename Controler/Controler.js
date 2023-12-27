@@ -2,6 +2,8 @@ const pool = require("../DB/DBconnection")
 const crypto = require('crypto')
 const Obatain = require('../Query/Query')
 const fs = require('fs')
+const Layouts = require('../Layout/Extraction')
+const puppeteer = require("puppeteer")
 
 
 const getUser = (req, res) => {
@@ -164,10 +166,10 @@ const getreport = async (req, res) => {
 };
 
 
-const getBuilding = async (req, res) =>{
-    pool.query(`select buildingname as "title", buildingid as "id" from building`, (err, results)=>{
-        if(err){
-            res.json({message: err})
+const getBuilding = async (req, res) => {
+    pool.query(`select buildingname as "title", buildingid as "id" from building`, (err, results) => {
+        if (err) {
+            res.json({ message: err })
         }
 
         res.json(results.rows)
@@ -500,19 +502,19 @@ const postModules = (req, res) => {
             // console.log(req.body)
 
             if (err) {
-                res.json({ message: err })
+                return res.json({ message: err })
             }
 
             if (results.rowCount > 0) {
-                res.json({ message: "Nome de cidade indisponivel ou já utilizado" })
+                return res.json({ message: "Nome de cidade indisponivel ou já utilizado" })
             } else {
 
                 pool.query(`insert into city (cityname, unityid, isactive) values ('${req.body.dados.nomeCidade.toUpperCase()}', ${req.body.dados.unidadeOrg.id}, ${req.body.dados.switchFieldName})`, (err, results) => {
                     if (err) {
-                        res.json({ message: err })
+                        return res.json({ message: err })
                     }
 
-                    res.json({ message: "Criada" })
+                    return res.json({ message: "Criada" })
                 })
             }
 
@@ -529,20 +531,20 @@ const postModules = (req, res) => {
 
         pool.query(`select * from unity where unityname = '${req.body.dados.nomeUnidadeOrg.toUpperCase()}'`, (err, results) => {
             if (err) {
-                res.json({ message: err })
+                return res.json({ message: err })
             }
 
             if (results.rowCount > 0) {
-                res.json({ message: "Nome de unidade indisponivel ou já utilizado" })
+                return res.json({ message: "Nome de unidade indisponivel ou já utilizado" })
             } else {
                 pool.query("INSERT INTO public.unity\n" +
                     "(unityname, activestatus, updatedat)\n" +
                     `VALUES('${req.body.dados.nomeUnidadeOrg.toUpperCase()}', ${unityActiveStatus}, CURRENT_DATE)\n`, (err, results) => {
                         if (err) {
-                            res.json({ error: err })
+                            return res.json({ error: err })
                         }
 
-                        res.json({ message: "Criada" })
+                        return res.json({ message: "Criada" })
                     })
             }
         })
@@ -552,27 +554,27 @@ const postModules = (req, res) => {
 
 
     if (req.body.mode === "setor") {
-        pool.query(`select * from sector where sectorname = '${String(req.body.dados.nomeSetor).toUpperCase()}'`, (error, results)=>{
-            if(error){
-                res.json(error)
+        pool.query(`select * from sector where sectorname = '${String(req.body.dados.nomeSetor).toUpperCase()}'`, (error, results) => {
+            if (error) {
+                return res.json(error)
             }
 
 
-            if(results.rowCount > 0){
-                res.json({message: "Nome indisponivel ou já utilizado"})
+            if (results.rowCount > 0) {
+                return res.json({ message: "Nome indisponivel ou já utilizado" })
 
             } else {
 
                 // console.log(req.body.dados)
-                pool.query(Obatain.InsertSector(req.body.dados), (err, results)=>{
-                    if(err){
-                        res.json({message: err})
+                pool.query(Obatain.InsertSector(req.body.dados), (err, results) => {
+                    if (err) {
+                        return res.json({ message: err })
                     }
-        
-                    res.json({message: "Criada"})
-               })
 
-                
+                    return res.json({ message: "Criada" })
+                })
+
+
             }
         })
 
@@ -581,26 +583,89 @@ const postModules = (req, res) => {
 
 
     if (req.body.mode === "predio") {
-        pool.query(`select * from building where buildingname = '${req.body.dados.nomePredio}'`, (error, results)=>{
-            if(error){
-                res.json(error)
+        pool.query(`select * from building where buildingname = '${req.body.dados.nomePredio.toUpperCase()}'`, (error, results) => {
+            if (error) {
+                return res.json(error)
             }
 
 
-            if(results.rowCount > 0){
-                res.json({message: "Nome indisponivel ou já utilizado"})
+            if (results.rowCount > 0) {
+                return res.json({ message: "Nome indisponivel ou já utilizado" })
 
             } else {
-                pool.query(Obatain.InsertBuilding(req.body.dados), (err, results)=>{
-                    if(err){
-                        res.json({message: err})
+                pool.query(Obatain.InsertBuilding(req.body.dados), (err, results) => {
+                    if (err) {
+                        return res.json({ message: err })
                     }
-        
-                    res.json({message: "Criada"})
-               })
+
+                    return res.json({ message: "Criada" })
+                })
             }
         })
-      
+
+
+
+    }
+
+    if (req.body.mode === "interecado") {
+
+
+        pool.query(`select * from interested_enterprises where enter_name = '${req.body.dados.nomeEmpresa.toUpperCase()}'`, (error, results) => {
+            if (error) {
+
+                return res.json(error)
+            }
+
+
+            if (results.rowCount > 0) {
+
+                return res.json({ message: "Nome indisponivel ou já utilizado" })
+
+            } else {
+                // console.log(req.body.dados)
+                pool.query(Obatain.InsertEnterprise(req.body.dados), (err, results) => {
+
+                    if (err) {
+                        return res.json({ message: err })
+                    }
+
+                    return res.json({ message: "Criada" })
+                })
+            }
+        })
+
+
+
+    }
+
+
+    if (req.body.mode === "coleta") {
+
+
+        pool.query(`select * from collect_type where ct_name = '${req.body.dados.nomeColeta.toUpperCase()}'`, (error, results) => {
+            if (error) {
+
+                return res.json(error)
+            }
+
+
+            if (results.rowCount > 0) {
+
+                return res.json({ message: "Nome indisponivel ou já utilizado" })
+
+            } else {
+                // console.log(req.body.dados)
+                pool.query(Obatain.InsertCollectType(req.body.dados), (err, results) => {
+
+                    if (err) {
+                        return res.json({ message: err })
+                    }
+
+                    return res.json({ message: "Criada" })
+                })
+            }
+        })
+
 
 
     }
@@ -647,12 +712,71 @@ const updateUser = (req, res) => {
 }
 
 
+const print = (req, res) => {
+    console.log(req.body)
+    // console.log(Layouts.HtmlLayout())
+
+    async function htmlToPdf(htmlContent, outputPath) {
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        // Set content to the page
+        await page.setContent(htmlContent);
+
+        // Generate PDF
+        await page.pdf({ path: outputPath, format: 'A4', printBackground: true });
+
+        // Close the browser
+        await browser.close();
+    }
+
+
+    const outputPath = 'output.pdf';
+
+    htmlToPdf(Layouts.HtmlLayout(), outputPath)
+        .then(() => console.log('PDF generated successfully'))
+        .catch(error => console.error('Error generating PDF:', error));
+}
+
+
+const notification = (req, res) => {
+    pool.query("select pn.note as \"content\",  concat('a ' ,cast (( current_date  - pn.createdat) as varchar), ' Dias') as \"time\" , cast(vizualized as varchar) as \"title\", 'empty' as \"avatar\" from push_notifications pn\n", (err, results) => {
+        res.json(results.rows)
+    })
+}
+
+
+const getInterested = (req, res) => {
+
+    pool.query('select * from interested_enterprises', (err, results) => {
+        if (err) {
+            res.json({ message: err })
+        }
+
+
+        res.json(results.rows)
+    })
+}
+
+const getColectType = (req, res) => {
+    pool.query('select * from collect_type', (err, results) => {
+        if (err) {
+            res.json({ message: err })
+        }
+
+
+        res.json(results.rows)
+    })
+}
+
+
 
 module.exports = {
     getUser, localize, login, registrar,
     getreport, getmyreports, imgConverter, getSectors,
     postReport, postunity, getUnitys, postModules, GetCity,
-    getExclusive, updateUser, deleteImage, getBuilding
+    getExclusive, updateUser, deleteImage, getBuilding,
+    print, notification, getInterested, getColectType
 }
 
 
